@@ -17,9 +17,7 @@ object SparkJoin {
     val bText = sparkCont.textFile(JoinConfig.bFilePath)
 
     val aMap = aText.map(getTuple)
-    aMap.foreach(println)
     val bMap = bText.map(getTuple)
-    bMap.foreach(println)
 
     println("join operation of a and b...")
     val joinRes = aMap.join(bMap).repartition(1)

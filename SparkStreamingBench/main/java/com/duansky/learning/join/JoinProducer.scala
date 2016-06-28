@@ -3,6 +3,8 @@ package com.duansky.learning.join
 import java.io.PrintWriter
 import java.util
 
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
+
 /**
   * Created by DuanSky on 2016/6/16.
   */

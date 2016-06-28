@@ -2,6 +2,7 @@ package com.duansky.learning.join
 
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
