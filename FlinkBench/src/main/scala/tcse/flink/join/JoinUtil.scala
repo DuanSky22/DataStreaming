@@ -1,4 +1,4 @@
-package tcse.flink.test
+package tcse.flink.join
 
 import java.io.File
 

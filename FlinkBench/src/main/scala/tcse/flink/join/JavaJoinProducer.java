@@ -1,4 +1,4 @@
-package tcse.flink.test;
+package tcse.flink.join;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -78,8 +78,8 @@ public class JavaJoinProducer {
         String[] topics = JoinConfig.topics().split(",");
 
         //write data to files.
-        writeResultToFile(topics[0],aKeys,JoinConfig.aFilePath());
-        writeResultToFile(topics[1],bKeys,JoinConfig.bFilePath());
+        writeResultToFile(topics[0],aKeys,JoinConfig.kafkaProduceAFilePath());
+        writeResultToFile(topics[1],bKeys,JoinConfig.kafkaProduceBFilePath());
 
         int aPos = 0, bPos = 0;
 
@@ -87,14 +87,14 @@ public class JavaJoinProducer {
             if(aPos != aKeys.size()){
                 String key = aKeys.get(aPos);
                 String data = topics[0] + "-" + new Date();
-                producer.send(new KeyedMessage<String, String>(topics[0], key ,data));
+                producer.send(new KeyedMessage(topics[0], key ,data));
                 System.out.println(topics[0] + "#" + (aPos+1) + "#" + data);
                 aPos++;
             }
             if(bPos != bKeys.size()){
                 String key = bKeys.get(bPos);
                 String data = topics[1] + "-" + new Date();
-                producer.send(new KeyedMessage<String, String>(topics[1], key ,data));
+                producer.send(new KeyedMessage(topics[1], key ,data));
                 System.out.println(topics[1] + "#" + (bPos+1) + "#" + data);
                 bPos++;
             }
