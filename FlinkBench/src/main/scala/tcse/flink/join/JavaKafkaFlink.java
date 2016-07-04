@@ -38,7 +38,7 @@ public class JavaKafkaFlink {
 
     private DataStream<Tuple2<String,String>> dataStream(String topic){
         return env.addSource(new FlinkKafkaConsumer09<Tuple2<String, String>>(topic,
-                new TypeInformationKeyValueSerializationSchema(BasicTypeInfo.STRING_TYPE_INFO,BasicTypeInfo.STRING_TYPE_INFO,new ExecutionConfig()),
+                new TypeInformationKeyValueSerializationSchema(BasicTypeInfo.STRING_TYPE_INFO, BasicTypeInfo.STRING_TYPE_INFO, new ExecutionConfig()),
                 prop));
     }
 
@@ -55,8 +55,8 @@ public class JavaKafkaFlink {
         JoinUtil.deleteDir(JoinConfig.flinkJoinTypeAFilePath());
         JoinUtil.deleteDir(JoinConfig.flinkJoinTypeBFilePath());
 
-        streamA.writeAsCsv(JoinConfig.flinkJoinTypeAFilePath());
-        streamB.writeAsCsv(JoinConfig.flinkJoinTypeBFilePath());
+        streamA.writeAsText(JoinConfig.flinkJoinTypeAFilePath());
+        streamB.writeAsText(JoinConfig.flinkJoinTypeBFilePath());
 
         streamA.print();
         streamB.print();
@@ -77,7 +77,7 @@ public class JavaKafkaFlink {
                     public Tuple3<String,String,String> join(Tuple2<String, String> first, Tuple2<String, String> second) throws Exception {
                         return new Tuple3(first.f0,first.f1,second.f1);
                     }
-                }).writeAsCsv(JoinConfig.flinkJoinResultFilePath());
+                }).writeAsText(JoinConfig.flinkJoinResultFilePath());
 
         try {
             env.execute("Kafka Flink");
