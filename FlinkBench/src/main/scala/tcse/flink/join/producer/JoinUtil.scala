@@ -1,4 +1,4 @@
-package com.duansky.learning.join
+package tcse.flink.join.producer
 
 import java.io.File
 
@@ -13,7 +13,7 @@ object JoinUtil {
       file.delete
       return
     }
-    else
+    else if(file.list!=null)
       file.list.foreach(child => deleteDir(path + File.separator + child))
     file.delete
   }

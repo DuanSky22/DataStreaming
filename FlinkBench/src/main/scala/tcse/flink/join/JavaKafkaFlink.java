@@ -1,8 +1,6 @@
 package tcse.flink.join;
 
-import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.functions.JoinFunction;
-import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
@@ -11,7 +9,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer09;
-import org.apache.flink.streaming.util.serialization.TypeInformationKeyValueSerializationSchema;
+import tcse.flink.join.producer.JoinConfig;
+import tcse.flink.join.producer.JoinUtil;
 
 import java.util.Properties;
 
@@ -28,35 +27,38 @@ public class JavaKafkaFlink {
 
     Properties prop = new Properties();
     String[] topics = null;
-    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(JoinConfig.parallel());
 
     public JavaKafkaFlink(){
-        prop.setProperty("bootstrap.servers", JoinConfig.brokers());
-        prop.setProperty("group.id", JoinConfig.group());
+        prop.put("bootstrap.servers", JoinConfig.brokers());
+        prop.put("group.id", JoinConfig.group());
+        prop.put("key.deserializer", "org.apache.kafka.common.serialization.StringDSerializer");
+        prop.put("value.deserializer", "org.apache.kafka.common.serialization.StringDSerializer");
+
         topics = JoinConfig.topics().split(",");
     }
 
     private DataStream<Tuple2<String,String>> dataStream(String topic){
-        return env.addSource(new FlinkKafkaConsumer09<Tuple2<String, String>>(topic,
-                new TypeInformationKeyValueSerializationSchema(BasicTypeInfo.STRING_TYPE_INFO,BasicTypeInfo.STRING_TYPE_INFO,new ExecutionConfig()),
+        return env.addSource(new FlinkKafkaConsumer09<Tuple2<String, String>>(
+                topic,
+                new KeyValueDeserializationSchema(),
                 prop));
     }
 
-
-
-
     public void join(){
 
-        DataStream<Tuple2<String,String>> streamA = dataStream(topics[0]);
-        DataStream<Tuple2<String,String>> streamB = dataStream(topics[1]);
-
-
+        //delete the old files.
         JoinUtil.deleteDir(JoinConfig.flinkJoinResultFilePath());
         JoinUtil.deleteDir(JoinConfig.flinkJoinTypeAFilePath());
         JoinUtil.deleteDir(JoinConfig.flinkJoinTypeBFilePath());
 
-        streamA.writeAsCsv(JoinConfig.flinkJoinTypeAFilePath());
-        streamB.writeAsCsv(JoinConfig.flinkJoinTypeBFilePath());
+        //get the stream of kafka.
+        DataStream<Tuple2<String,String>> streamA = dataStream(topics[0]);
+        DataStream<Tuple2<String,String>> streamB = dataStream(topics[1]);
+
+        //write the data to the files.
+        streamA.writeAsText(JoinConfig.flinkJoinTypeAFilePath());
+        streamB.writeAsText(JoinConfig.flinkJoinTypeBFilePath());
 
         streamA.print();
         streamB.print();
@@ -77,7 +79,7 @@ public class JavaKafkaFlink {
                     public Tuple3<String,String,String> join(Tuple2<String, String> first, Tuple2<String, String> second) throws Exception {
                         return new Tuple3(first.f0,first.f1,second.f1);
                     }
-                }).writeAsCsv(JoinConfig.flinkJoinResultFilePath());
+                }).writeAsText(JoinConfig.flinkJoinResultFilePath());
 
         try {
             env.execute("Kafka Flink");
@@ -86,4 +88,5 @@ public class JavaKafkaFlink {
         }
 
     }
+
 }

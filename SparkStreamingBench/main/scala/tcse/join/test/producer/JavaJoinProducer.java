@@ -1,9 +1,11 @@
-package tcse.flink.join;
+package tcse.join.test.producer;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+import tcse.kafka.test.KafkaConfig;
 
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -24,13 +26,13 @@ public class JavaJoinProducer {
     private void writeResultToFile(String topic,List<String> keys, String path){
         try {
             PrintWriter writer = new PrintWriter(path);
-            for(String key : keys){
+            for (String key : keys) {
                 String value = topic + ":" + new Date().toString();
-                writer.println("("+key+","+value+")");
+                writer.println("(" + key + "," + value + ")");
             }
             writer.flush();
             writer.close();
-        }catch(Exception e){
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -55,7 +57,7 @@ public class JavaJoinProducer {
         producer = new Producer<String, String>(new ProducerConfig(props));
     }
 
-    void produce() {
+    public void produce() {
         List<String> aKeys = new LinkedList<String>(), bKeys = new LinkedList<String>();
 
         Set<String> crossSet = new HashSet<String>(), aKeySet = new HashSet<String>(), bKeySet = new HashSet<String>();
@@ -78,8 +80,8 @@ public class JavaJoinProducer {
         String[] topics = JoinConfig.topics().split(",");
 
         //write data to files.
-        writeResultToFile(topics[0],aKeys,JoinConfig.kafkaProduceAFilePath());
-        writeResultToFile(topics[1],bKeys,JoinConfig.kafkaProduceBFilePath());
+        writeResultToFile(topics[0],aKeys,JoinConfig.aFilePath());
+        writeResultToFile(topics[1],bKeys,JoinConfig.bFilePath());
 
         int aPos = 0, bPos = 0;
 
@@ -87,14 +89,14 @@ public class JavaJoinProducer {
             if(aPos != aKeys.size()){
                 String key = aKeys.get(aPos);
                 String data = topics[0] + "-" + new Date();
-                producer.send(new KeyedMessage(topics[0], key ,data));
+                producer.send(new KeyedMessage<String, String>(topics[0], key ,data));
                 System.out.println(topics[0] + "#" + (aPos+1) + "#" + data);
                 aPos++;
             }
             if(bPos != bKeys.size()){
                 String key = bKeys.get(bPos);
                 String data = topics[1] + "-" + new Date();
-                producer.send(new KeyedMessage(topics[1], key ,data));
+                producer.send(new KeyedMessage<String, String>(topics[1], key ,data));
                 System.out.println(topics[1] + "#" + (bPos+1) + "#" + data);
                 bPos++;
             }

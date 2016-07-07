@@ -1,4 +1,4 @@
-package tcse.flink.join
+package tcse.join.test.producer
 
 import java.io.File
 
